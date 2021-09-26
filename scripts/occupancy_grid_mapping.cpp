@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <math.h>
 #include <vector>
@@ -20,10 +21,69 @@ double mapWidth = 30000, mapHeight = 15000;
 double robotXOffset = mapWidth/5, robotYOffset = mapHeight/3;
 
 //define an l vector to store log odds values of each cell
-std::vector<std::vector<double> > l(mapWidth/gridWidth,std::vector<double>(mapHeight/gridHeight));
+std::vector< std::vector<double> > l(mapWidth/gridWidth,std::vector<double>(mapHeight/gridHeight));
 
 double inverseSensorModel(double x, double y, double theta, double xi, double yi, double sensorData[])
 {
+    // define sensor characteristics
+    double Zk, thetaK, sensorTheta;
+    double minDelta = -1;
+    double alpha = 200, beta = 20;
+
+    // compute r and phi
+    double r = sqrt(pow(xi-x,2)+pow(yi-y,2));
+    double phi = atan2(yi-y, xi-x) - theta;
+
+    // scaling measurement to [-90 -37.5 -22.5 -7.5 7.5 22.5 37.5 90]
+    for (int i = 0; i < 8; i++)
+    {
+        if (i == 0)
+        {
+            sensorTheta = -90 * (M_PI / 180);
+        }
+        else if (i == 1)
+        {
+            sensorTheta = -37.5 * (M_PI / 180);
+        }
+        else if (i == 6)
+        {
+            sensorTheta = 37.5 * (M_PI / 180);
+        }
+        else if (i == 7)
+        {
+            sensorTheta = 90 * (M_PI / 180);
+        }
+        else
+        {
+            sensorTheta = (-37.5 + (i-1)*15)*(M_PI / 180);
+        }
+
+        if (fabs(phi - sensorTheta) < minDelta || minDelta == -1)
+        {
+            Zk = sensorData[i];
+            thetaK = sensorTheta;
+            minDelta = fabs(phi - sensorTheta);
+        }
+    }
+
+    if (r > std::min(Zmax, Zk + alpha/2) || fabs(phi - thetaK) > beta/2 || Zk > Zmax || Zk < Zmin)
+    {
+        // return unknown
+        return l0;
+    }
+
+    if (Zk < Zmax && fabs(r - Zk) < alpha/2)
+    {
+        // return occupied
+        return locc;
+    }
+
+    if (r < Zk)
+    {
+        // return free
+        return lfree;
+    }
+
     return 0.4;
 }
 
