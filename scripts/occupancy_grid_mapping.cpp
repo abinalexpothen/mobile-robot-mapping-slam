@@ -4,12 +4,16 @@
 #include <math.h>
 #include <vector>
 
+#include "matplotlibcpp.h"
+
+namespace plt = matplotlibcpp;
+
 // sensor characteristics
 double Zmax = 5000;
 double Zmin = 170;
 
 // define cell state
-double l0 = 0,locc = 0.4, lfree = -0.4;
+double l0 = 0.0,locc = 0.4, lfree = -0.4;
 
 // grid dimensions
 double gridWidth = 100, gridHeight = 100;
@@ -78,13 +82,11 @@ double inverseSensorModel(double x, double y, double theta, double xi, double yi
         return locc;
     }
 
-    if (r < Zk)
+    if (r <= Zk)
     {
         // return free
         return lfree;
     }
-
-    return 0.4;
 }
 
 void occupancyGridMapping(double Robotx, double Roboty, double Robottheta, double sensorData[])
@@ -101,6 +103,49 @@ void occupancyGridMapping(double Robotx, double Roboty, double Robottheta, doubl
             }
         }
     }
+}
+
+void visualization()
+{
+    plt::title("My map");
+    plt::xlim(0,300);
+    plt::ylim(0,150);
+
+    std::vector<int> x_occ;
+    std::vector<int> y_occ;
+
+    std::vector<int> x_free;
+    std::vector<int> y_free;
+
+    std::vector<int> x_unkown;
+    std::vector<int> y_unknown;
+
+    for (int x = 0; x < mapWidth/gridWidth; x++)
+    {
+        for (int y = 0; y < mapHeight/gridHeight; y++)
+        {
+            if (l[x][y] == locc || l[x][y] > 0.0)
+            {
+                x_occ.push_back(x);
+                y_occ.push_back(y);
+            }
+            else if (l[x][y] == lfree || l[x][y] < 0.0)
+            {
+                x_free.push_back(x);
+                y_free.push_back(y);
+            }
+            else if (l[x][y] == l0)
+            {
+                x_unkown.push_back(x);
+                y_unknown.push_back(y);
+            }
+        }
+    }
+
+    plt::plot(x_unkown,y_unknown,"g.");
+    plt::plot(x_occ, y_occ, "k.");
+    plt::plot(x_free, y_free, "r.");
+    plt::show();
 }
 
 int main()
@@ -124,13 +169,15 @@ int main()
     }
 
     // displaying the map
-    for (int x = 0;x < mapWidth / gridWidth; x++)
-    {
-        for (int y = 0; y < mapHeight / gridHeight; y++)
-        {
-            std::cout << l[x][y] << " ";
-        }
-    }
+    // for (int x = 0;x < mapWidth / gridWidth; x++)
+    // {
+    //     for (int y = 0; y < mapHeight / gridHeight; y++)
+    //     {
+    //         std::cout << l[x][y] << " ";
+    //     }
+    // }
+
+    visualization();
 
     return 0;
 }
