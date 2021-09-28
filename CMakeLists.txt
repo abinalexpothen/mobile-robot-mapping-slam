@@ -12,5 +12,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/scripts/measurement.txt
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/scripts/poses.txt
     ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
-add_executable(mobilerobotmapping scripts/occupancy_grid_mapping.cpp scripts/matplotlibcpp.h ${PYTHON_LIBRARIES}) 
-target_link_libraries(mobilerobotmapping python2.7)
+add_executable(occupanygridmapping scripts/occupancy_grid_mapping.cpp scripts/matplotlibcpp.h ${PYTHON_LIBRARIES}) 
+target_link_libraries(occupanygridmapping python2.7)
+
+add_executable(multisensorfusion scripts/multi_sensor_fusion.cpp)
+target_link_libraries(multisensorfusion)
